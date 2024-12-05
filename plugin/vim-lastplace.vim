@@ -22,6 +22,10 @@ if !exists('g:lastplace_ignore_buftype')
     let g:lastplace_ignore_buftype = "help,nofile,quickfix"
 endif
 
+if !exists('g:lastplace_force_schemes')
+    let g:lastplace_force_schemes = "suda://"
+endif
+
 if !exists('g:lastplace_open_folds')
     let g:lastplace_open_folds = 1
 endif
@@ -29,14 +33,22 @@ endif
 fu! s:lastplace_can_run()
     if index(split(g:lastplace_ignore_buftype, ","), &buftype) != -1
         return 0
-       endif
+    endif
 
     if index(split(g:lastplace_ignore, ","), &filetype) != -1
         return 0
     endif
 
     try
-        "if the file does not exist on disk (a new, unsaved file) then do nothing
+        "check for schemes to force allow, since checking existence is hard
+        for s in split(g:lastplace_force_schemes, ',')
+            if stridx(@%, s) == 0
+                return 1
+            endif
+        endfor
+
+        "if the file does not exist on disk, then do nothing
+        "this could be a new, unsaved file, or a non-filesystem path
         if empty(glob(@%))
             return 0
         endif
